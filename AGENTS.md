@@ -2,10 +2,17 @@
 
 ## What this project is
 
-A client-only interactive riddle challenge (five rooms → one code word → a Golden
-Ticket). Vite + React SPA, no backend, no database, no external services and no
-secrets. All puzzle content lives in `src/data/rooms.js`; progress is kept in
-`localStorage`.
+A client-only interactive classroom challenge built from the "Build Charlie's
+Chocolate Factory" program: hook → pick 3 of 10 cards → three quiz clues (each
+reveals a discovery) → puzzle solved (answer plus the team's picks compared) →
+think-pair-share → lesson transition. Vite + React SPA, no backend, no database,
+no external services and no secrets.
+
+All activity content (cards, quiz clues and their correct answers, next-step
+ideas, mission areas) lives in `src/data/activity.js`. Screens are one component
+each under `src/components/`, with the step machine in `src/App.jsx`. There is no
+persistence: a reload restarts the challenge, and the footer's "Start over"
+resets it.
 
 ## Running it in the sandbox
 
@@ -42,9 +49,11 @@ unchanged. `server.host` is `0.0.0.0` so the proxy can reach the dev server.
 - `curl -s http://localhost:3000/src/main.jsx` must return **unhashed** module
   source (proves the dev server is serving the checkout, not a prebuilt bundle).
 - Healthcheck: `docker compose -f docker-compose.base44.yml ps` shows `healthy`.
-- In the browser: enter the factory, answer a room (e.g. `walnut` in room II —
-  a wrong answer twice reveals the hint), collect the five letters `C A C A O`,
-  then type `cacao` in the vault to reach the ticket.
+- In the browser: start the mission, pick exactly 3 cards (a 4th tap shows the
+  "only three fit the budget" nudge), lock in, answer the three clues (a wrong
+  option is struck through and can be retried), check the solved screen lists
+  Factory Building / Factory Workers / Raw Materials and compares the team's
+  picks, tap some think-pair-share chips, then reach the lesson screen.
 
 There is no test suite or linter configured; the build check is
 `docker compose -f docker-compose.base44.yml exec -T web npm run build`.

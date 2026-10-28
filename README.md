@@ -1,10 +1,14 @@
 # charlies-chocolate-factory
 
-Interactive Charlie's Chocolate Factory mystery challenge website.
+Interactive Charlie's Chocolate Factory mystery challenge website — a classroom
+activity where teams decide which three things Charlie needs to open his factory,
+then confirm each answer with three quiz clues.
 
-Five sealed rooms, five riddles, five letters, one code word — solve them all to
-open the vault and claim the last Golden Ticket. Built with Vite + React; no
-backend, no database, no accounts. Progress is saved in `localStorage`.
+Flow: hook → pick 3 of 10 cards → quiz clue 1–3 (each reveals a discovery) →
+puzzle solved (answer + the team's picks compared) → think-pair-share →
+transition to the lesson.
+
+Built with Vite + React. No backend, no database, no accounts.
 
 ## Run it
 
@@ -21,10 +25,9 @@ hot-reload. See `AGENTS.md` for sandbox/preview specifics.
 
 ```
 src/
-  App.jsx            stage machine: intro → rooms → vault → ticket
-  components/        Intro, Room, ClueTrail, Vault, Ticket
-  data/rooms.js      riddles, accepted answers, clues (the whole challenge)
-  lib/answer.js      answer + code matching
-  lib/storage.js     localStorage progress
+  App.jsx            step machine: hook → cards → clues → solved → share → lesson
+  components/        Hook, CardChallenge, QuizClue, PuzzleSolved,
+                     ThinkPairShare, LessonTransition, StepTrail, ThingCard
+  data/activity.js   cards, quiz clues, next-step ideas, mission areas
   styles.css         chocolate-and-gold theme
 ```

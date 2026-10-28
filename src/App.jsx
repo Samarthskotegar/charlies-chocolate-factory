@@ -1,54 +1,43 @@
-import { useEffect, useState } from 'react';
-import { ROOMS, FINAL_CODE } from './data/rooms.js';
-import { loadProgress, saveProgress, clearProgress } from './lib/storage.js';
-import Intro from './components/Intro.jsx';
-import Room from './components/Room.jsx';
-import ClueTrail from './components/ClueTrail.jsx';
-import Vault from './components/Vault.jsx';
-import Ticket from './components/Ticket.jsx';
+import { useState } from 'react';
+import { CARDS, CLUES, SOLVED_ORDER } from './data/activity.js';
+import StepTrail from './components/StepTrail.jsx';
+import Hook from './components/Hook.jsx';
+import CardChallenge from './components/CardChallenge.jsx';
+import QuizClue from './components/QuizClue.jsx';
+import PuzzleSolved from './components/PuzzleSolved.jsx';
+import ThinkPairShare from './components/ThinkPairShare.jsx';
+import LessonTransition from './components/LessonTransition.jsx';
+
+const STAGE = { hook: -1, cards: 0, clue: 1, solved: 2, share: 3, lesson: 4 };
 
 export default function App() {
-  const [solved, setSolved] = useState(() => loadProgress());
-  const [view, setView] = useState(() => (loadProgress().length === ROOMS.length ? 'vault' : 'intro'));
-  const [activeId, setActiveId] = useState(() => ROOMS.find((room) => !loadProgress().includes(room.id))?.id ?? ROOMS[0].id);
+  const [step, setStep] = useState('hook');
+  const [clueIndex, setClueIndex] = useState(0);
+  const [picked, setPicked] = useState([]);
 
-  useEffect(() => {
-    saveProgress(solved);
-  }, [solved]);
+  const solvedCards = SOLVED_ORDER.map((id) => CARDS.find((card) => card.id === id));
+  const pickedCards = picked.map((id) => CARDS.find((card) => card.id === id));
 
-  const activeRoom = ROOMS.find((room) => room.id === activeId) ?? ROOMS[0];
-  const activeIndex = ROOMS.indexOf(activeRoom);
-  const letters = ROOMS.filter((room) => solved.includes(room.id)).map((room) => room.letter);
+  function toggleCard(id) {
+    setPicked((prev) => {
+      if (prev.includes(id)) return prev.filter((cardId) => cardId !== id);
+      if (prev.length >= 3) return prev;
+      return [...prev, id];
+    });
+  }
 
-  function start() {
-    if (solved.length === ROOMS.length) {
-      setView('vault');
+  function passClue() {
+    if (clueIndex < CLUES.length - 1) {
+      setClueIndex(clueIndex + 1);
       return;
     }
-    const next = ROOMS.find((room) => !solved.includes(room.id));
-    setActiveId(next.id);
-    setView('room');
+    setStep('solved');
   }
 
-  function handleSolve(id) {
-    setSolved((prev) => (prev.includes(id) ? prev : [...prev, id]));
-  }
-
-  function handleContinue() {
-    const remaining = ROOMS.filter((room) => !solved.includes(room.id));
-    if (remaining.length === 0) {
-      setView('vault');
-      return;
-    }
-    setActiveId(remaining[0].id);
-    setView('room');
-  }
-
-  function handleRestart() {
-    clearProgress();
-    setSolved([]);
-    setActiveId(ROOMS[0].id);
-    setView('intro');
+  function restart() {
+    setPicked([]);
+    setClueIndex(0);
+    setStep('hook');
   }
 
   return (
@@ -58,35 +47,54 @@ export default function App() {
           <span className="brand-mark" aria-hidden="true">
             ◈
           </span>
-          <span>Bucket&rsquo;s Chocolate Works · est. 1897</span>
+          <span>Charlie&rsquo;s Chocolate Factory · Factory Expert Team</span>
         </header>
 
-        <ClueTrail solved={solved} activeId={activeId} />
+        <StepTrail stage={STAGE[step]} />
 
-        {view === 'intro' && (
-          <Intro solvedCount={solved.length} total={ROOMS.length} onStart={start} />
-        )}
+        {step === 'hook' && <Hook onStart={() => setStep('cards')} />}
 
-        {view === 'room' && (
-          <Room
-            room={activeRoom}
-            index={activeIndex}
-            total={ROOMS.length}
-            solved={solved.includes(activeRoom.id)}
-            onSolve={handleSolve}
-            onContinue={handleContinue}
+        {step === 'cards' && (
+          <CardChallenge
+            picked={picked}
+            onToggle={toggleCard}
+            onLock={() => {
+              setClueIndex(0);
+              setStep('clue');
+            }}
           />
         )}
 
-        {view === 'vault' && (
-          <Vault letters={letters} onUnlock={() => setView('ticket')} />
+        {step === 'clue' && (
+          <QuizClue
+            key={CLUES[clueIndex].id}
+            clue={CLUES[clueIndex]}
+            index={clueIndex}
+            total={CLUES.length}
+            onPass={passClue}
+          />
         )}
 
-        {view === 'ticket' && <Ticket code={FINAL_CODE.toUpperCase()} onRestart={handleRestart} />}
+        {step === 'solved' && (
+          <PuzzleSolved
+            solvedCards={solvedCards}
+            pickedCards={pickedCards}
+            onNext={() => setStep('share')}
+          />
+        )}
+
+        {step === 'share' && <ThinkPairShare onNext={() => setStep('lesson')} />}
+
+        {step === 'lesson' && <LessonTransition onRestart={restart} />}
       </div>
 
       <footer className="footer">
-        A five-room riddle challenge · {solved.length} of {ROOMS.length} rooms opened
+        <span>Hands-on mystery challenge · Build Charlie&rsquo;s Chocolate Factory</span>
+        {step !== 'hook' && (
+          <button type="button" className="link-btn" onClick={restart}>
+            Start over
+          </button>
+        )}
       </footer>
     </div>
   );
